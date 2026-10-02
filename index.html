@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>Diaspora Connect, profil candidat</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:#E10106;--orange:#F16900;--violet:#6E2C90;--ink:#1A1618;--muet:#6B6266;--ligne:#EAE2DE;--cream:#F6EFEA}
+*{box-sizing:border-box}body{margin:0;font-family:"DM Sans",system-ui,sans-serif;background:#fff;color:var(--ink);font-size:15px;line-height:1.5}
+header{padding:16px 24px;border-bottom:1px solid var(--ligne);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.marque{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:19px;background:linear-gradient(90deg,var(--red),var(--orange));-webkit-background-clip:text;background-clip:text;color:transparent}
+.role{font-size:13px;color:var(--muet);padding-left:12px;border-left:1px solid var(--ligne)}
+main{max-width:860px;margin:0 auto;padding:32px 20px 60px}
+h1{font-family:"Bricolage Grotesque",sans-serif;font-size:30px;margin:0 0 4px}h2{font-family:"Bricolage Grotesque",sans-serif;font-size:18px;margin:32px 0 12px}
+.pour{color:var(--muet);margin:0 0 6px}.pour b{color:var(--ink)}.echeance{font-size:12px;color:var(--muet)}
+dl{display:grid;grid-template-columns:200px 1fr;gap:8px 18px;margin:0}dt{color:var(--muet);font-size:13px}dd{margin:0}
+@media(max-width:600px){dl{grid-template-columns:1fr}dt{margin-top:6px}}
+.carte{border:1px solid var(--ligne);border-radius:16px;padding:18px 20px;background:#fff}
+.crit{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--ligne)}.crit:last-child{border:0}
+.pts{color:var(--orange);letter-spacing:2px;white-space:nowrap}.pts i{color:var(--ligne);font-style:normal}.com{font-size:13px;color:var(--muet);margin:-2px 0 6px}
+.moy{display:inline-block;padding:3px 10px;border-radius:999px;background:var(--cream);font-weight:700;margin-bottom:8px}
+.btn{display:inline-block;padding:11px 18px;border-radius:999px;background:linear-gradient(90deg,var(--red),var(--orange));color:#fff;font-weight:700;text-decoration:none;border:0;font:inherit;cursor:pointer}
+iframe{width:100%;border:1px solid var(--ligne);border-radius:12px;background:var(--cream)}.video{aspect-ratio:16/9}.cv{height:80vh}
+.msg{max-width:480px;margin:80px auto;text-align:center;color:var(--muet)}.msg h1{color:var(--ink);font-size:24px}
+footer{max-width:860px;margin:0 auto;padding:0 20px 40px;font-size:12px;color:var(--muet)}
+</style></head><body>
+<header><span class="marque">Diaspora Connect</span><span class="role">Profil transmis par l'équipe recrutement</span></header>
+<main id="m"><div class="msg"><p>Ouverture du profil…</p></div></main>
+<footer>Ce profil vous est transmis à titre confidentiel pour le recrutement de ce poste. Merci de ne pas le diffuser.</footer>
+<script>
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const b64 = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), c => c.charCodeAt(0));
+const m = document.getElementById('m');
+const fin = (t, p) => { m.innerHTML = `<div class="msg"><h1>${t}</h1><p>${p}</p></div>`; };
+const LIB = {residence: 'Lieu de résidence', situation: 'Situation actuelle', diplome: 'Dernier diplôme', diplome_int: 'Intitulé du diplôme',
+  etab: 'Établissement', langues: 'Langues', francais: 'Niveau de français', experience: 'Dernière expérience', competences: 'Compétences',
+  afrique: 'Lien avec l\'Afrique', types_mission: 'Missions recherchées', dispo: 'Disponibilité', date_dispo: 'Date de disponibilité', linkedin: 'LinkedIn'};
+(async () => {
+  const h = location.hash.slice(1).split('.');
+  if (h.length !== 2 || !/^[\w-]{20,}$/.test(h[0])) return fin('Lien incomplet', 'Ouvrez le lien tel qu\'il vous a été envoyé, en entier.');
+  history.replaceState(null, '', location.pathname);   // la clé ne reste pas dans la barre d'adresse
+  let r; try { r = await fetch('d/' + h[0] + '.json', {cache: 'no-store'}); } catch (e) { return fin('Profil indisponible', 'Vérifiez votre connexion puis rouvrez le lien.'); }
+  if (!r.ok) return fin('Lien expiré ou désactivé', 'Ce profil n\'est plus accessible. Pour le consulter à nouveau, écrivez à l\'équipe Diaspora Connect.');
+  let f;
+  try {
+    const x = await r.json(), cle = await crypto.subtle.importKey('raw', b64(h[1]), 'AES-GCM', false, ['decrypt']);
+    f = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name: 'AES-GCM', iv: b64(x.iv)}, cle, b64(x.ct))));
+  } catch (e) { return fin('Lien invalide', 'Ce lien est incomplet ou a été modifié. Ouvrez-le tel qu\'il vous a été envoyé.'); }
+  const exp = new Date(f.expire);
+  if (exp < new Date()) return fin('Lien expiré', 'Ce profil n\'est plus accessible. Pour le consulter à nouveau, écrivez à l\'équipe Diaspora Connect.');
+  const c = f.candidat, d = f.decouverte, val = v => Array.isArray(v) ? v.join(', ') : v;
+  const pts = n => '●'.repeat(n) + '<i>' + '●'.repeat(5 - n) + '</i>';
+  let cvUrl = '';
+  if (f.cv) cvUrl = URL.createObjectURL(new Blob([b64(f.cv.b64)], {type: f.cv.type}));
+  m.innerHTML = `<h1>${esc(c.nom)}</h1>
+    <p class="pour">Candidature au poste <b>${esc(f.offre.poste)}</b> chez <b>${esc(f.offre.entreprise)}</b></p>
+    <p class="echeance">Lien valable jusqu'au ${exp.toLocaleDateString('fr-FR', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
+    <h2>Profil</h2><div class="carte"><dl>${Object.keys(LIB).filter(k => c[k]).map(k => `<dt>${LIB[k]}</dt><dd>${k === 'linkedin' ? `<a href="${esc(c[k])}" target="_blank" rel="noopener">${esc(c[k])}</a>` : esc(val(c[k]))}</dd>`).join('')}</dl></div>
+    ${d ? `<h2>Entretien de découverte avec Diaspora Connect</h2><div class="carte">${d.moyenne != null ? `<span class="moy">${String(d.moyenne).replace('.', ',')} / 5</span>` : ''}
+      ${Object.entries(d.notes).map(([k, n]) => `<div class="crit"><span>${esc(k)}</span><span class="pts">${pts(n)}</span></div>${d.commentaires[k] ? `<div class="com">${esc(d.commentaires[k])}</div>` : ''}`).join('')}
+      ${d.synthese ? `<p>${esc(d.synthese)}</p>` : ''}</div>` : ''}
+    ${f.video ? `<h2>Vidéo de motivation</h2><iframe class="video" src="${esc(f.video)}" allow="autoplay; fullscreen" allowfullscreen></iframe>` : ''}
+    ${cvUrl ? `<h2>CV</h2><p><a class="btn" href="${cvUrl}" download="${esc(f.cv.nom)}">Télécharger le CV</a></p>${/pdf/.test(f.cv.type) ? `<iframe class="cv" src="${cvUrl}"></iframe>` : ''}` : ''}`;
+})();
+</script></body></html>
